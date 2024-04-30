@@ -1,0 +1,150 @@
+---
+title: "Water"
+output: html_document
+date: "2024-04-28"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+datos_agua <-read.csv("water_potability.csv")
+names(datos_agua)
+summary(datos_agua)
+```
+
+
+```{r}
+#Grafico de potabilidad y ver la relación entre las variables
+pie(table(datos_agua$Potability))
+```
+```{r}
+library(corrplot)
+Mcor <- cor(datos_agua)
+corrplot(Mcor, method = c("number"))
+Mcor
+```
+
+```{r}
+#Hacemos el árbol de decisión
+library(rpart)
+decision_tree <- rpart(Potability ~ ph +Hardness + Solids + Chloramines + Sulfate + Conductivity + Organic_carbon + Trihalomethanes + Turbidity, data = datos_agua, method = "class")
+
+#Guardamos el árbol en una imagen
+png("arbol_decision_potability.png", width = 800, height = 600)
+plot(decision_tree)
+text(decision_tree)
+dev.off()
+```
+
+```{r}
+#Dividimos los datos en set de entrenamiento y set de testeo
+indice <- sample(nrow(datos_agua), 0.75*nrow(datos_agua))
+datos_entreno <- datos_agua[indice, ]
+datos_test <- datos_agua[-indice, ]
+```
+
+
+```{r}
+#Hacemos el árbol de decisión con los datos de entreno
+modelo_entreno <- rpart(Potability ~ ph +Hardness + Solids + Chloramines + Sulfate + Conductivity + Organic_carbon + Trihalomethanes + Turbidity, data = datos_entreno, method = "class")
+#Realizamos las predicciones con el modelo de entreno y los datos de prueba/test
+predicciones <- predict(modelo_entreno, newdata = datos_test, type = "class")
+library(caret)
+referencia <- factor(datos_test$Potability)
+#Comprobamos que tengan el mismo número de variables
+length(referencia)
+length(predicciones)
+#Realizamos la confusionMatrix
+confusionMatrix(data = predicciones, reference = referencia)
+```
+```{r}
+tabla <- table(datos_agua$Potability)
+cero <- (tabla[1]/sum(tabla))*100
+uno <- (tabla[2]/sum(tabla))*100
+tabla[1] <- cero
+tabla[2] <- uno
+tabla
+```
+```{r}
+library("ggplot2")
+ggplot(datos_agua, aes(x=ph)) + geom_density(aes(fill=factor(Potability)), alpha=0.5)
+```
+
+
+```{r}
+ggplot(datos_agua, aes(x=Hardness)) + geom_density(aes(fill=factor(Potability)), alpha=0.5)
+```
+
+
+```{r}
+ggplot(datos_agua, aes(x=Solids)) + geom_density(aes(fill=factor(Potability)), alpha=0.5)
+```
+
+
+```{r}
+ggplot(datos_agua, aes(x=Chloramines)) + geom_density(aes(fill=factor(Potability)), alpha=0.5)
+```
+
+
+```{r}
+ggplot(datos_agua, aes(x=Sulfate)) + geom_density(aes(fill=factor(Potability)), alpha=0.5)
+```
+
+
+```{r}
+ggplot(datos_agua, aes(x=Conductivity)) + geom_density(aes(fill=factor(Potability)), alpha=0.5)
+```
+
+
+```{r}
+ggplot(datos_agua, aes(x=Organic_carbon)) + geom_density(aes(fill=factor(Potability)), alpha=0.5)
+```
+
+
+```{r}
+ggplot(datos_agua, aes(x=Trihalomethanes)) + geom_density(aes(fill=factor(Potability)), alpha=0.5)
+```
+
+```{r}
+ggplot(datos_agua, aes(x=Turbidity)) + geom_density(aes(fill=factor(Potability)), alpha=0.5)
+```
+```{r}
+names(modelo_entreno)
+```
+```{r}
+indice80 <- sample(nrow(datos_agua), 0.8*nrow(datos_agua))
+datos_entreno80 <- datos_agua[indice80, ]
+datos_test80 <- datos_agua[-indice80, ]
+```
+
+
+```{r}
+
+#Hacemos el árbol de decisión con los datos de entreno
+modelo_entreno80 <- rpart(Potability ~ ph +Hardness + Solids + Chloramines + Sulfate + Conductivity + Organic_carbon + Trihalomethanes + Turbidity, data = datos_entreno80, method = "class")
+#Realizamos las predicciones con el modelo de entreno y los datos de prueba/test
+predicciones80 <- predict(modelo_entreno80, newdata = datos_test80, type = "class")
+library(caret)
+referencia80 <- factor(datos_test80$Potability)
+#Comprobamos que tengan el mismo número de variables
+length(referencia80)
+length(predicciones80)
+#Realizamos la confusionMatrix
+confusionMatrix(data = predicciones80, reference = referencia80)
+confusionMatrix(data = predicciones, reference = referencia)
+```
+```{r}
+tabla = matrix(c(0.3240, 0.6760, 0.6748,0.9055, 0.3275,0.6725,0.7173,0.7961),2,4,byrow=T)
+colnames(tabla)=c("Error", "Exactitud", "Precisión", "Sensibilidad")
+rownames(tabla)=c("75%", "80%")
+tabla
+```
+

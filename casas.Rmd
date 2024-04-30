@@ -1,0 +1,97 @@
+---
+title: "Casas"
+output: html_document
+date: "2024-04-30"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r cars}
+datos_casas <- read.csv("casas_ponta_grossa.csv")
+names(datos_casas)
+table(datos_casas$Bairro)
+datos_casas$Referência <- NULL
+datos_casas$X <- NULL
+summary(datos_casas)
+```
+```{r}
+library(corrplot)
+datos_casasC<- datos_casas
+datos_casasC$Bairro <- NULL
+Mcor <- cor(datos_casasC)
+corrplot(Mcor, method = c("number"))
+```
+
+```{r}
+#Dividimos los datos en set de entrenamiento y set de testeo
+indice <- sample(nrow(datos_casas), 0.75*nrow(datos_casas))
+datos_entreno <- datos_casas[indice, ]
+datos_test <- datos_casas[-indice, ]
+```
+
+```{r}
+regresion <- lm(Valor.Venda~., data = datos_entreno)
+summary(regresion)
+```
+
+```{r}
+par(mfrow=c(2,2))
+plot(regresion)
+
+```
+```{r}
+coeficientes <- coef(regresion)
+coeficientes
+```
+```{r}
+intervalo_confianza<-confint(regresion)
+intervalo_confianza
+```
+
+
+```{r}
+predicciones <- predict(regresion, newdata = datos_test)
+error <- sqrt(mean((datos_test$Valor.Venda - predicciones)^2))
+error
+prediccionesConf <- predict(regresion, newdata = datos_test, interval="confidence")
+errorConf <- sqrt(mean((datos_test$Valor.Venda - prediccionesConf)^2))
+errorConf
+prediccionesPred <- predict(regresion, newdata = datos_test, interval="prediction")
+errorPred <- sqrt(mean((datos_test$Valor.Venda - prediccionesPred)^2))
+errorPred
+```
+
+```{r}
+library(ggplot2)
+ggplot(datos_casas, aes(x=datos_casas$Bairro, y=datos_casas$Valor.Venda)) + geom_boxplot() + labs(x="Barrios", y="Valor vivienda")
+```
+
+```{r}
+indice80 <- sample(nrow(datos_casas), 0.80*nrow(datos_casas))
+datos_entreno80 <- datos_casas[indice80, ]
+datos_test80 <- datos_casas[-indice80, ]
+```
+
+```{r}
+regresion80 <- lm(Valor.Venda~., data = datos_entreno80)
+```
+
+
+
+```{r}
+predicciones80 <- predict(regresion80, newdata = datos_test80)
+error80 <- sqrt(mean((datos_test80$Valor.Venda - predicciones80)^2))
+error80
+prediccionesConf80 <- predict(regresion80, newdata = datos_test80, interval="confidence")
+errorConf80 <- sqrt(mean((datos_test80$Valor.Venda - prediccionesConf80)^2))
+errorConf80
+prediccionesPred80 <- predict(regresion80, newdata = datos_test80, interval="prediction")
+errorPred80 <- sqrt(mean((datos_test80$Valor.Venda - prediccionesPred80)^2))
+errorPred80
+```
+
+
